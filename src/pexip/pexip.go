@@ -15,6 +15,7 @@ const (
 	CommandUnlock       = "unlock"
 	CommandMuteGuests   = "muteguests"
 	CommandUnmuteGuests = "unmuteguests"
+	ConferenceStatus    = "conference_status"
 	RequestToken        = "request_token"
 	RefreshToken        = "refresh_token"
 	ReleaseToken        = "release_token"

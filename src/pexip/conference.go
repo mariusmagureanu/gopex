@@ -53,8 +53,11 @@ func (c *Conference) Dial() error {
 	return nil
 }
 
-func (c *Conference) Status() error {
-	return nil
+func (c *Conference) Status(token string) ([]byte, error) {
+	logger.Debug("fetching status for room", c.Name)
+	statusUrl := fmt.Sprintf("%s/%s/%s", urlNameSpace, c.Name, ConferenceStatus)
+
+	return doRequest(http.MethodGet, statusUrl, token, "", []byte{})
 }
 
 func (c *Conference) Lock(token string) ([]byte, error) {

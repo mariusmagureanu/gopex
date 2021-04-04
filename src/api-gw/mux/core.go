@@ -62,12 +62,13 @@ func InitMux() (*mux.Router, error) {
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/{cmd:lock|unlock|muteguests|unmuteguests}", wrapRequest(conferenceCmdHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/transform_layout", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapRequest(pingReqHandler))
-
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/disconnect", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/transfer", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/role", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd:spotlighton|spotlightoff}", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd}", wrapRequest(pingReqHandler))
+
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/status", wrapRequest(conferenceStatusHandler))
 
 	return mgmtMux, nil
 }
@@ -185,4 +186,37 @@ func conferenceCmdHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(cmdResp)
+}
+
+func conferenceStatusHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	confName := vars["room"]
+
+	var statusResp []byte
+	conf, err := confStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	token, err := tokenStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	statusResp, err = conf.Status(token)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(statusResp)
 }
