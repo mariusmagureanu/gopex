@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"bitbucket.org/kinlydev/gopex/pkg/errors"
 	logger "bitbucket.org/kinlydev/gopex/pkg/log"
 )
 
@@ -143,6 +144,12 @@ func (ts TokenStore) Release(room *Conference) error {
 // conference and starts a goroutine which will keep on
 // fetching a **refresh_token** every **refreshInterval**.
 func (ts TokenStore) Watch(room *Conference) error {
+
+	currentToken, _ := ts.Get(room.Name)
+
+	if currentToken != "" {
+		return errors.ErrorRoomAlreadyStarted
+	}
 
 	err := ts.request(room)
 

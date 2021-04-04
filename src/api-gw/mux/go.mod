@@ -5,6 +5,7 @@ go 1.16
 replace (
 	bitbucket.org/kinlydev/gopex/pexip => ../../pexip
 	bitbucket.org/kinlydev/gopex/pkg/log => ../../../pkg/log
+	bitbucket.org/kinlydev/gopex/pkg/errors => ../../../pkg/errors
 )
 
 require (

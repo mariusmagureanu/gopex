@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"bitbucket.org/kinlydev/gopex/pexip"
+	"bitbucket.org/kinlydev/gopex/pkg/errors"
 	logger "bitbucket.org/kinlydev/gopex/pkg/log"
 )
 
@@ -99,6 +100,12 @@ func monitorStartHandler(w http.ResponseWriter, r *http.Request) {
 	err = tokenStore.Watch(conf)
 
 	if err != nil {
+		if err == errors.ErrorRoomAlreadyStarted {
+			logger.Info(err)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

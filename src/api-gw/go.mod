@@ -8,6 +8,7 @@ replace (
 	bitbucket.org/kinlydev/gopex/pkg/dbl => ../../pkg/dbl
 	bitbucket.org/kinlydev/gopex/pkg/ds => ../../pkg/ds
 	bitbucket.org/kinlydev/gopex/pkg/log => ../../pkg/log
+	bitbucket.org/kinlydev/gopex/pkg/errors => ../../pkg/errors
 )
 
 require (
