@@ -9,15 +9,16 @@ import (
 	"time"
 
 	"bitbucket.org/kinlydev/gopex/api-gw/mux"
+	"bitbucket.org/kinlydev/gopex/pexip"
 	"bitbucket.org/kinlydev/gopex/pkg/dbl"
 	"bitbucket.org/kinlydev/gopex/pkg/log"
 )
 
 var (
 	commandLine  = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	port         = commandLine.Int("port", 8088, "Pexmonitor port.")
-	httpsPort    = commandLine.Int("tls-port", 8443, "Pexmonitor https port.")
-	host         = commandLine.String("host", "0.0.0.0", "Set the Pexmonitor's host.")
+	port         = commandLine.Int("port", 8088, "Monitor port.")
+	httpsPort    = commandLine.Int("tls-port", 8443, "Monitor https port.")
+	host         = commandLine.String("host", "0.0.0.0", "Set the Monitor's host.")
 	versionFlag  = commandLine.Bool("V", false, "Show version and exit")
 	logLevelFlag = commandLine.String("log-level", "debug", "Logging level [quiet|debug|info|warning|error]")
 
@@ -29,6 +30,11 @@ var (
 	postgresMaxIdleConns    = commandLine.Int("db-max-idle-conns", 5, "PostgreSQL maximum idle connections")
 	postgresMaxOpenConns    = commandLine.Int("db-max-open-conns", 20, "PostgreSQL maximum open connections")
 	postgresMaxConnLifetime = commandLine.Duration("db-max-conn-lifetime", 10*time.Minute, "PostgreSQL maximum connection lifetime")
+
+	pexipNode                 = commandLine.String("pexip-node", "https://test-join.dev.kinlycloud.net", "Pexip node address")
+	pexipClientTimeout        = commandLine.Duration("pexip-timeout", 5*time.Second, "Default timeout for the http client talking with Pexip")
+	pexipMaxConns             = commandLine.Int("pexip-max-conns", 100, "Maximum open connections against a Pexip node")
+	pexipTokenRefreshInterval = commandLine.Duration("pexip-token-refresh", 60*time.Second, "Interval for refreshing Pexip tokens")
 
 	sqliteDBFlag = commandLine.String("sqlite", "", "Path to an sqlite database")
 
@@ -102,11 +108,22 @@ func main() {
 
 	initLogger()
 
-	if *sqliteDBFlag != "" {
-		err = initSqlite()
-	} else {
-		err = initPostgresql()
-	}
+	//TODO: uncomment this if you actually have a database
+	/*
+			if *sqliteDBFlag != "" {
+				err = initSqlite()
+			} else {
+				err = initPostgresql()
+			}
+
+
+		if err != nil {
+			log.ErrorSync(err)
+			os.Exit(1)
+		}
+	*/
+
+	err = pexip.InitPexipClient(*pexipNode, *pexipClientTimeout, *pexipMaxConns, *pexipMaxConns, *pexipTokenRefreshInterval)
 
 	if err != nil {
 		log.ErrorSync(err)
