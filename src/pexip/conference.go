@@ -92,8 +92,11 @@ func (c *Conference) UnmuteGuests(token string) ([]byte, error) {
 	return doRequest(http.MethodPost, unmuteGuestsUrl, token, "", []byte{})
 }
 
-func (c *Conference) Disconnect() error {
-	return nil
+func (c *Conference) Disconnect(token string) ([]byte, error) {
+	logger.Debug("disconnecting room", c.Name)
+	disconnectUrl := fmt.Sprintf("%s/%s/%s", urlNameSpace, c.Name, ConferenceDisconnect)
+
+	return doRequest(http.MethodPost, disconnectUrl, token, "", []byte{})
 }
 
 func (c *Conference) Message() error {
