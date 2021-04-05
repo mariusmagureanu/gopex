@@ -102,12 +102,18 @@ func (c *Conference) Disconnect(token string) ([]byte, error) {
 	return doRequest(http.MethodPost, disconnectUrl, token, "", []byte{})
 }
 
-func (c *Conference) Message() error {
-	return nil
+func (c *Conference) Message(token string, message []byte) ([]byte, error) {
+	logger.Debug("sending a message to room", c.Name)
+	messageUrl := fmt.Sprintf("%s/%s/%s", urlNameSpace, c.Name, ConferenceMessage)
+
+	return doRequest(http.MethodPost, messageUrl, token, "", message)
 }
 
-func (c *Conference) Participants() error {
-	return nil
+func (c *Conference) Participants(token string) ([]byte, error) {
+	logger.Debug("fetching participants from room", c.Name)
+	participantsUrl := fmt.Sprintf("%s/%s/%s", urlNameSpace, c.Name, ConferenceParticipants)
+
+	return doRequest(http.MethodGet, participantsUrl, token, "", []byte{})
 }
 
 func (c *Conference) TransformLayout() error {

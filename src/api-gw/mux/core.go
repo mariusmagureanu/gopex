@@ -44,7 +44,7 @@ func InitMux() (*mux.Router, error) {
 
 	// rest interface taken from pexws
 	mgmtMux.HandleFunc(urlNameSpace+"/{room}", wrapRequest(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants", wrapRequest(pingReqHandler))
+	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants", wrapRequest(conferenceParticipantsHandler)).Methods(http.MethodGet)
 	mgmtMux.HandleFunc(urlNameSpace+"/{room}/disconnect_all", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(urlNameSpace+"/{room}/override_layout", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:lock|unlock}", wrapRequest(pingReqHandler))
@@ -59,11 +59,11 @@ func InitMux() (*mux.Router, error) {
 	// rest interface taken from pexwebrtc
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/start/{room}", wrapRequest(monitorStartHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/stop/{room}", wrapRequest(monitorStopHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/dial", wrapRequest(conferenceDialHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/dial", wrapRequest(conferenceDialHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/{cmd:lock|unlock|muteguests|unmuteguests}", wrapRequest(conferenceCmdHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/transform_layout", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapRequest(pingReqHandler))
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/disconnect", wrapRequest(conferenceDisconnectHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/disconnect", wrapRequest(conferenceDisconnectHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/transfer", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/role", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd:spotlighton|spotlightoff}", wrapRequest(pingReqHandler))
@@ -297,4 +297,37 @@ func conferenceDialHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(dialResp)
+}
+
+func conferenceParticipantsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	confName := vars["room"]
+
+	var participantsResp []byte
+	conf, err := confStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	token, err := tokenStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	participantsResp, err = conf.Participants(token)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(participantsResp)
 }
