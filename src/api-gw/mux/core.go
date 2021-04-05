@@ -2,7 +2,6 @@ package mux
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"bitbucket.org/kinlydev/gopex/pexip"
-	"bitbucket.org/kinlydev/gopex/pkg/errors"
 	logger "bitbucket.org/kinlydev/gopex/pkg/log"
 )
 
@@ -24,6 +22,8 @@ var (
 	confStore  = pexip.InitConfStore()
 	tokenStore = pexip.InitTokenStore()
 )
+
+type wrappedFunc = func(http.ResponseWriter, *http.Request, *pexip.Conference, string)
 
 //TODO: to be removed
 func dummyConferences() {
@@ -57,11 +57,11 @@ func InitMux() (*mux.Router, error) {
 	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd}", wrapRequest(pingReqHandler))
 
 	// rest interface taken from pexwebrtc
-	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/start/{room}", wrapRequest(monitorStartHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/start/{room}", monitorStartHandler).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/stop/{room}", wrapRequest(monitorStopHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/dial", wrapRequest(conferenceDialHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/{cmd:lock|unlock|muteguests|unmuteguests}", wrapRequest(conferenceCmdHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/transform_layout", wrapRequest(pingReqHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/transform_layout", wrapRequest(transformLayoutHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/disconnect", wrapRequest(conferenceDisconnectHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/transfer", wrapRequest(pingReqHandler))
@@ -75,303 +75,34 @@ func InitMux() (*mux.Router, error) {
 	return mgmtMux, nil
 }
 
-func wrapRequest(f http.HandlerFunc) http.HandlerFunc {
+func wrapRequest(f wrappedFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Debug(r.Method, r.Proto, r.Host+r.RequestURI)
-		f(w, r)
-	}
-}
+		vars := mux.Vars(r)
+		confName := vars["room"]
 
-func pingReqHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("X-Pong", strconv.FormatInt(time.Now().Unix(), 10))
-	w.Header().Set("Content-Length", "0")
-}
+		conf, err := confStore.Get(confName)
 
-func monitorStartHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["room"]
-
-	conf, err := confStore.Get(name)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	err = tokenStore.Watch(conf)
-
-	if err != nil {
-		if err == errors.ErrorRoomAlreadyStarted {
-			logger.Info(err)
-			w.WriteHeader(http.StatusOK)
+		if err != nil {
+			logger.Warning(err)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+		token, err := tokenStore.Get(confName)
 
-	w.WriteHeader(http.StatusAccepted)
+		if err != nil {
+			logger.Warning(err)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		f(w, r, conf, token)
+	}
 }
 
-func monitorStopHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["room"]
-
-	conf, err := confStore.Get(name)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	err = tokenStore.Release(conf)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func conferenceCmdHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	confName := vars["room"]
-	cmd := vars["cmd"]
-
-	var cmdResp []byte
-	conf, err := confStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	token, err := tokenStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	switch cmd {
-	case pexip.CommandLock:
-		cmdResp, err = conf.Lock(token)
-		break
-	case pexip.CommandUnlock:
-		cmdResp, err = conf.Unlock(token)
-		break
-	case pexip.CommandMuteGuests:
-		cmdResp, err = conf.MuteGuests(token)
-		break
-	case pexip.CommandUnmuteGuests:
-		cmdResp, err = conf.UnmuteGuests(token)
-		break
-	default:
-		logger.Warning("unsupported command", cmd)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(cmdResp)
-}
-
-func conferenceStatusHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	confName := vars["room"]
-
-	var statusResp []byte
-	conf, err := confStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	token, err := tokenStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	statusResp, err = conf.Status(token)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(statusResp)
-}
-
-func conferenceDisconnectHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	confName := vars["room"]
-
-	var disconnectResp []byte
-	conf, err := confStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	token, err := tokenStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	disconnectResp, err = conf.Disconnect(token)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(disconnectResp)
-
-}
-
-func conferenceDialHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	confName := vars["room"]
-
-	var dialResp []byte
-	conf, err := confStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	token, err := tokenStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	dp, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-
-	dialResp, err = conf.Dial(token, dp)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(dialResp)
-}
-
-func conferenceParticipantsHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	confName := vars["room"]
-
-	var participantsResp []byte
-	conf, err := confStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	token, err := tokenStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	participantsResp, err = conf.Participants(token)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(participantsResp)
-}
-
-func conferenceMessageHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	confName := vars["room"]
-
-	var messageResp []byte
-	conf, err := confStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	token, err := tokenStore.Get(confName)
-
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	msg, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-
-	messageResp, err = conf.Message(token, msg)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(messageResp)
+func pingReqHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
+	w.Header().Set("X-Pong", strconv.FormatInt(time.Now().Unix(), 10))
+	w.Header().Set("Content-Length", "0")
 }

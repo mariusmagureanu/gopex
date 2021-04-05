@@ -11,18 +11,19 @@ import (
 )
 
 const (
-	CommandLock            = "lock"
-	CommandUnlock          = "unlock"
-	CommandMuteGuests      = "muteguests"
-	CommandUnmuteGuests    = "unmuteguests"
-	ConferenceStatus       = "conference_status"
-	ConferenceDisconnect   = "disconnect"
-	ConferenceDial         = "dial"
-	ConferenceMessage      = "message"
-	ConferenceParticipants = "participants"
-	RequestToken           = "request_token"
-	RefreshToken           = "refresh_token"
-	ReleaseToken           = "release_token"
+	CommandLock               = "lock"
+	CommandUnlock             = "unlock"
+	CommandMuteGuests         = "muteguests"
+	CommandUnmuteGuests       = "unmuteguests"
+	ConferenceStatus          = "conference_status"
+	ConferenceDisconnect      = "disconnect"
+	ConferenceDial            = "dial"
+	ConferenceMessage         = "message"
+	ConferenceParticipants    = "participants"
+	ConferenceTransformLayout = "transform_layout"
+	RequestToken              = "request_token"
+	RefreshToken              = "refresh_token"
+	ReleaseToken              = "release_token"
 
 	urlNameSpace = "api/client/v2/conferences"
 )

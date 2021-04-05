@@ -116,6 +116,10 @@ func (c *Conference) Participants(token string) ([]byte, error) {
 	return doRequest(http.MethodGet, participantsUrl, token, "", []byte{})
 }
 
-func (c *Conference) TransformLayout() error {
-	return nil
+func (c *Conference) TransformLayout(token string, layout []byte) ([]byte, error) {
+	logger.Debug("transforming the layout for room", c.Name)
+	layoutUrl := fmt.Sprintf("%s/%s/%s", urlNameSpace, c.Name, ConferenceTransformLayout)
+
+	return doRequest(http.MethodPost, layoutUrl, token, "", layout)
+
 }
