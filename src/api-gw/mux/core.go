@@ -70,6 +70,7 @@ func InitMux() (*mux.Router, error) {
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd}", wrapRequest(pingReqHandler))
 
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/status", wrapRequest(conferenceStatusHandler)).Methods(http.MethodGet)
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/message", wrapRequest(conferenceMessageHandler)).Methods(http.MethodPost)
 
 	return mgmtMux, nil
 }
@@ -330,4 +331,47 @@ func conferenceParticipantsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(participantsResp)
+}
+
+func conferenceMessageHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	confName := vars["room"]
+
+	var messageResp []byte
+	conf, err := confStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	token, err := tokenStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	msg, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	defer r.Body.Close()
+
+	messageResp, err = conf.Message(token, msg)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(messageResp)
 }
