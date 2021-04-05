@@ -1,6 +1,7 @@
 package mux
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
@@ -138,6 +139,18 @@ func conferenceDialHandler(w http.ResponseWriter, r *http.Request, conf *pexip.C
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	var dpr pexip.DialResponse
+
+	err = json.Unmarshal(dialResp, &dpr)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	participantStore.AddMultiple(dpr.Result)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(dialResp)

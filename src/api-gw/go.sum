@@ -1,5 +1,3 @@
-bitbucket.org/kinlydev/gopex/src/pexip v0.0.0-20210405181043-dfa5fe82b1c2 h1:eoR4d1iTYS5tbIPK4lUqVMcOKlpERb68Tu57zxFSUf4=
-bitbucket.org/kinlydev/gopex/src/pexip v0.0.0-20210405181043-dfa5fe82b1c2/go.mod h1:MBW8PnPrhkinhmdb5Z40FQUoTQ20FcCgo0nWggM6ABg=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=

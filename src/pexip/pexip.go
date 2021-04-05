@@ -21,6 +21,7 @@ const (
 	ConferenceMessage         = "message"
 	ConferenceParticipants    = "participants"
 	ConferenceTransformLayout = "transform_layout"
+	ParticipantDisconnect     = "disconnect"
 	RequestToken              = "request_token"
 	RefreshToken              = "refresh_token"
 	ReleaseToken              = "release_token"
@@ -43,12 +44,19 @@ func InitConfStore() *ConferenceStore {
 }
 
 // InitTokenStore initializes a new TokenStore.
-func InitTokenStore() TokenStore {
+func InitTokenStore() *TokenStore {
 	ts := TokenStore{}
 	ts.store = make(map[string]string)
 	ts.doneListeners = make(map[string](chan bool))
 
-	return ts
+	return &ts
+}
+
+func InitParticipantStore() *ParticipantStore {
+	ps := ParticipantStore{}
+	ps.store = make(map[string]*Participant)
+
+	return &ps
 }
 
 // InitPexipClient intializes a new http client used

@@ -12,6 +12,5 @@ require (
 	bitbucket.org/kinlydev/gopex/pexip v0.0.0-00010101000000-000000000000
 	bitbucket.org/kinlydev/gopex/pkg/errors v0.0.0-00010101000000-000000000000
 	bitbucket.org/kinlydev/gopex/pkg/log v0.0.0-00010101000000-000000000000
-	bitbucket.org/kinlydev/gopex/src/pexip v0.0.0-20210405181043-dfa5fe82b1c2
 	github.com/gorilla/mux v1.8.0
 )

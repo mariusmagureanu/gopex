@@ -29,7 +29,7 @@ type TokenStore struct {
 
 // set updates the storage with a conference name
 // and a new token value.
-func (ts TokenStore) set(roomName, token string) {
+func (ts *TokenStore) set(roomName, token string) {
 	ts.Lock()
 	ts.store[roomName] = token
 	ts.Unlock()
@@ -37,7 +37,7 @@ func (ts TokenStore) set(roomName, token string) {
 
 // remove deletes from the storage the conference name,
 // both the token and the chanel are removed.
-func (ts TokenStore) remove(roomName string) {
+func (ts *TokenStore) remove(roomName string) {
 	ts.Lock()
 	delete(ts.store, roomName)
 	delete(ts.doneListeners, roomName)
@@ -46,7 +46,7 @@ func (ts TokenStore) remove(roomName string) {
 
 // refresh performs a http request against the pexip node
 // and asks for a **refresh_token** for a specific conference.
-func (ts TokenStore) refresh(room *Conference) error {
+func (ts *TokenStore) refresh(room *Conference) error {
 	urlReq := fmt.Sprintf("%s/%s/%s", urlNameSpace, room.Name, RefreshToken)
 	logger.Debug("refreshing token for room", room.Name)
 
@@ -71,7 +71,7 @@ func (ts TokenStore) refresh(room *Conference) error {
 
 // request performs a http request against the pexip node
 // and asks for a new initial **request_token** given a specific conference.
-func (ts TokenStore) request(room *Conference) error {
+func (ts *TokenStore) request(room *Conference) error {
 	urlReq := fmt.Sprintf("%s/%s/%s", urlNameSpace, room.Name, RequestToken)
 	logger.Debug("started watching room", room.Name)
 
@@ -98,7 +98,7 @@ func (ts TokenStore) request(room *Conference) error {
 }
 
 // Get returns the current token for a given conference.
-func (ts TokenStore) Get(roomName string) (string, error) {
+func (ts *TokenStore) Get(roomName string) (string, error) {
 	ts.RLock()
 	defer ts.RUnlock()
 
@@ -112,7 +112,7 @@ func (ts TokenStore) Get(roomName string) (string, error) {
 // Release performs a http request against the pexip node
 // in order to revoke the current token, if succesfull the token
 // storage will also clear it from its own storage.
-func (ts TokenStore) Release(room *Conference) error {
+func (ts *TokenStore) Release(room *Conference) error {
 	revokeUrl := fmt.Sprintf("%s/%s/%s/%s", pexipHost, urlNameSpace, room.Name, ReleaseToken)
 	logger.Debug("releasing token for room", room.Name)
 
@@ -143,7 +143,7 @@ func (ts TokenStore) Release(room *Conference) error {
 // Watch retrieves an initial **request_token** for a given
 // conference and starts a goroutine which will keep on
 // fetching a **refresh_token** every **refreshInterval**.
-func (ts TokenStore) Watch(room *Conference) error {
+func (ts *TokenStore) Watch(room *Conference) error {
 
 	currentToken, _ := ts.Get(room.Name)
 

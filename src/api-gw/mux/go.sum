@@ -1,4 +1,2 @@
-bitbucket.org/kinlydev/gopex/src/pexip v0.0.0-20210405181043-dfa5fe82b1c2 h1:eoR4d1iTYS5tbIPK4lUqVMcOKlpERb68Tu57zxFSUf4=
-bitbucket.org/kinlydev/gopex/src/pexip v0.0.0-20210405181043-dfa5fe82b1c2/go.mod h1:MBW8PnPrhkinhmdb5Z40FQUoTQ20FcCgo0nWggM6ABg=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=

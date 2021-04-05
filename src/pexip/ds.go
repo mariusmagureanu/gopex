@@ -43,3 +43,8 @@ type dialPayload struct {
 	RemoteDisplayName   string `json:"remote_display_name"`
 	Text                string `json:"text"`
 }
+
+type DialResponse struct {
+	Status string   `json:"status"`
+	Result []string `json:"result"`
+}
