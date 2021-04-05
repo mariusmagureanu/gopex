@@ -2,6 +2,7 @@ package mux
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -58,7 +59,7 @@ func InitMux() (*mux.Router, error) {
 	// rest interface taken from pexwebrtc
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/start/{room}", wrapRequest(monitorStartHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/stop/{room}", wrapRequest(monitorStopHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/dial", wrapRequest(pingReqHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/dial", wrapRequest(conferenceDialHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/{cmd:lock|unlock|muteguests|unmuteguests}", wrapRequest(conferenceCmdHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/transform_layout", wrapRequest(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapRequest(pingReqHandler))
@@ -225,7 +226,7 @@ func conferenceDisconnectHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	confName := vars["room"]
 
-	var statusResp []byte
+	var disconnectResp []byte
 	conf, err := confStore.Get(confName)
 
 	if err != nil {
@@ -242,7 +243,7 @@ func conferenceDisconnectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statusResp, err = conf.Disconnect(token)
+	disconnectResp, err = conf.Disconnect(token)
 
 	if err != nil {
 		logger.Error(err)
@@ -251,6 +252,49 @@ func conferenceDisconnectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(statusResp)
+	w.Write(disconnectResp)
 
+}
+
+func conferenceDialHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	confName := vars["room"]
+
+	var dialResp []byte
+	conf, err := confStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	token, err := tokenStore.Get(confName)
+
+	if err != nil {
+		logger.Warning(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	dp, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	defer r.Body.Close()
+
+	dialResp, err = conf.Dial(token, dp)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(dialResp)
 }

@@ -17,6 +17,7 @@ const (
 	CommandUnmuteGuests  = "unmuteguests"
 	ConferenceStatus     = "conference_status"
 	ConferenceDisconnect = "disconnect"
+	ConferenceDial       = "dial"
 	RequestToken         = "request_token"
 	RefreshToken         = "refresh_token"
 	ReleaseToken         = "release_token"

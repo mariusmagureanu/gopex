@@ -49,8 +49,11 @@ type Conference struct {
 	Pin   string
 }
 
-func (c *Conference) Dial() error {
-	return nil
+func (c *Conference) Dial(token string, dp []byte) ([]byte, error) {
+	logger.Debug("dialing in into room", c.Name)
+	dialUrl := fmt.Sprintf("%s/%s/%s", urlNameSpace, c.Name, ConferenceDial)
+
+	return doRequest(http.MethodPost, dialUrl, token, "", dp)
 }
 
 func (c *Conference) Status(token string) ([]byte, error) {

@@ -26,3 +26,20 @@ type tokenResponse struct {
 	Status string
 	Result result
 }
+
+// dialPayload is a helper type for creating
+// a conference dial in request.
+type dialPayload struct {
+	Role                string `json:"role"`
+	Destination         string `json:"destination"`
+	Protocol            string `json:"protocol"`
+	PresentationURL     string `json:"presentation_url"`
+	Streaming           string `json:"streaming"`
+	DtmfSequence        string `json:"dtmf_sequence"`
+	SourceDisplayName   string `json:"source_display_name"`
+	Source              string `json:"source"`
+	CallType            string `json:"call_type"`
+	KeepConferenceAlive string `json:"keep_conference_alive"`
+	RemoteDisplayName   string `json:"remote_display_name"`
+	Text                string `json:"text"`
+}
