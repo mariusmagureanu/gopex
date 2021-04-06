@@ -1,3 +1,5 @@
+// Package ds acts as a placeholder for all the
+// model objects that are to be persisted.
 package ds
 
 type Feature struct {

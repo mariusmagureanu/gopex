@@ -16,5 +16,6 @@ require (
 	bitbucket.org/kinlydev/gopex/pexip v0.0.0-00010101000000-000000000000
 	bitbucket.org/kinlydev/gopex/pkg/dbl v0.0.0-00010101000000-000000000000
 	bitbucket.org/kinlydev/gopex/pkg/log v0.0.0-00010101000000-000000000000
+	golang.org/x/tools v0.1.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )

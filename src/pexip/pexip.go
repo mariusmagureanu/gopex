@@ -1,3 +1,6 @@
+// Package pexip acts as a client for accesing
+// Pexip's client api (https://docs.pexip.com/api_client/api_rest.html)
+// The main consumer of this package is api-gw.
 package pexip
 
 import (

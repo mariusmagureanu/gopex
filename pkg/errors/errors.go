@@ -1,3 +1,5 @@
+// Package errors is a common placeholder
+// for all the custom errors in pexip monitor.
 package errors
 
 import "errors"

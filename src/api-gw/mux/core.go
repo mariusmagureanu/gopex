@@ -1,3 +1,6 @@
+// Package mux holds the entire implementation
+// of all the request handlers that are to be
+// supported by the exposed rest interface.
 package mux
 
 import (
