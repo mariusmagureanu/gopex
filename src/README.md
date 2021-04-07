@@ -1,5 +1,5 @@
-Api-gw
-======
+Pexip monitor
+============
 
 Api-gw is a web server which exposes a rest interface. 
 
