@@ -4,7 +4,6 @@
 package mux
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,8 +19,6 @@ const (
 )
 
 var (
-	urlNameSpace = fmt.Sprintf("%s%s%s", "/pexip_monitor", apiV1Prefix, "/rooms")
-
 	confStore        = pexip.InitConfStore()
 	tokenStore       = pexip.InitTokenStore()
 	participantStore = pexip.InitParticipantStore()
@@ -45,37 +42,40 @@ func InitMux() (*mux.Router, error) {
 	dummyConferences()
 
 	mgmtMux := mux.NewRouter()
-	mgmtMux.HandleFunc(apiV1Prefix+"/ping", wrapConferenceHandler(pingReqHandler)).Methods(http.MethodHead)
+	mgmtMux.HandleFunc(apiV1Prefix+"/ping", wrapConferenceHandler(pingReqHandler)).Methods(http.MethodHead, http.MethodGet)
 
-	// rest interface taken from pexws
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants", wrapConferenceHandler(conferenceParticipantsHandler)).Methods(http.MethodGet)
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/disconnect_all", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/override_layout", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:lock|unlock}", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:muteguests|unmuteguests}", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/disconnect_part", wrapParticipantHandler(participantDisconnectHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/demote_host", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/promote_guest", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/lock_part", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd:unmute_part|mute_part}", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd}", wrapConferenceHandler(pingReqHandler))
+	/*
+		// rest interface taken from pexws
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/disconnect_all", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/override_layout", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:lock|unlock}", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:muteguests|unmuteguests}", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/disconnect_part", wrapParticipantHandler(participantDisconnectHandler)).Methods(http.MethodPost)
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/demote_host", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/promote_guest", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/lock_part", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd:unmute_part|mute_part}", wrapConferenceHandler(pingReqHandler))
+		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd}", wrapConferenceHandler(pingReqHandler))
+	*/
 
 	// rest interface taken from pexwebrtc
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd}", wrapConferenceHandler(pingReqHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapConferenceHandler(pingReqHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/transfer", wrapConferenceHandler(pingReqHandler))
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/role", wrapConferenceHandler(pingReqHandler))
+
+	mgmtMux.HandleFunc(apiV1Prefix+"/{room}/participants", wrapConferenceHandler(conferenceParticipantsHandler)).Methods(http.MethodGet)
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/start/{room}", monitorStartHandler).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/monitor/stop/{room}", wrapConferenceHandler(monitorStopHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/dial", wrapConferenceHandler(conferenceDialHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/{cmd:lock|unlock|muteguests|unmuteguests}", wrapConferenceHandler(conferenceCmdHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/transform_layout", wrapConferenceHandler(transformLayoutHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapConferenceHandler(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/disconnect", wrapConferenceHandler(conferenceDisconnectHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/transfer", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/role", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd:spotlighton|spotlightoff}", wrapConferenceHandler(pingReqHandler))
-	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd}", wrapConferenceHandler(pingReqHandler))
-
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd:spotlighton|spotlightoff}", wrapParticipantHandler(participantSpotlightHandler)).Methods(http.MethodPost)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/status", wrapConferenceHandler(conferenceStatusHandler)).Methods(http.MethodGet)
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/message", wrapConferenceHandler(conferenceMessageHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{partid}/disconnect", wrapParticipantHandler(participantDisconnectHandler)).Methods(http.MethodPost)
 
 	return mgmtMux, nil
 }

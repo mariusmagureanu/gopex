@@ -59,3 +59,17 @@ func (p *Participant) Disconnect(roomName, token string) ([]byte, error) {
 
 	return doRequest(http.MethodPost, disconnectUrl, token, "", []byte{})
 }
+
+func (p *Participant) SpotlightOff(roomName, token string) ([]byte, error) {
+	logger.Debug("setting spotlight off for participant ", p.UUID, "from room", roomName)
+	spotlightOffUrl := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantSpotlightOff)
+
+	return doRequest(http.MethodPost, spotlightOffUrl, token, "", []byte{})
+}
+
+func (p *Participant) SpotlightOn(roomName, token string) ([]byte, error) {
+	logger.Debug("setting spotlight on for participant ", p.UUID, "from room", roomName)
+	spotlightOnUrl := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantSpotlightOn)
+
+	return doRequest(http.MethodPost, spotlightOnUrl, token, "", []byte{})
+}

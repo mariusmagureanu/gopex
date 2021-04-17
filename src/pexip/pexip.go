@@ -25,6 +25,8 @@ const (
 	ConferenceParticipants    = "participants"
 	ConferenceTransformLayout = "transform_layout"
 	ParticipantDisconnect     = "disconnect"
+	ParticipantSpotlightOff   = "spotlightoff"
+	ParticipantSpotlightOn    = "spotlighton"
 	RequestToken              = "request_token"
 	RefreshToken              = "refresh_token"
 	ReleaseToken              = "release_token"
