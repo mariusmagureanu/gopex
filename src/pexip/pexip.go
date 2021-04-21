@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	logger "bitbucket.org/kinlydev/gopex/pkg/log"
+	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
 const (

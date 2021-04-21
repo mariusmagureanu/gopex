@@ -3,7 +3,7 @@ package dbl
 import (
 	"testing"
 
-	"bitbucket.org/kinlydev/gopex/pkg/ds"
+	"github.com/mariusmagureanu/gopex/pkg/ds"
 )
 
 func TestGetSessionByKey(t *testing.T) {

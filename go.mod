@@ -1,3 +1,3 @@
-module bitbucket.org/kinlydev/gopex
+module github.com/mariusmagureanu/gopex
 
 go 1.16

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	logger "bitbucket.org/kinlydev/gopex/pkg/log"
+	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
 // ConferenceStore is a type that acts as storage

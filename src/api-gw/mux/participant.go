@@ -4,8 +4,8 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
-	"bitbucket.org/kinlydev/gopex/pexip"
-	logger "bitbucket.org/kinlydev/gopex/pkg/log"
+	"github.com/mariusmagureanu/gopex/pexip"
+	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
 func participantDisconnectHandler(w http.ResponseWriter, r *http.Request, p *pexip.Participant, confName, token string) {

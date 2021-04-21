@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"bitbucket.org/kinlydev/gopex/pexip"
-	"bitbucket.org/kinlydev/gopex/pkg/errors"
-	logger "bitbucket.org/kinlydev/gopex/pkg/log"
+	"github.com/mariusmagureanu/gopex/pexip"
+	"github.com/mariusmagureanu/gopex/pkg/errors"
+	logger "github.com/mariusmagureanu/gopex/pkg/log"
 
 	"github.com/gorilla/mux"
 )

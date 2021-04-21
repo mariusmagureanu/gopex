@@ -3,7 +3,7 @@ package dbl
 import (
 	"gorm.io/gorm"
 
-	"bitbucket.org/kinlydev/gopex/pkg/ds"
+	"github.com/mariusmagureanu/gopex/pkg/ds"
 )
 
 type RoomDao interface {

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"bitbucket.org/kinlydev/gopex/pkg/errors"
-	logger "bitbucket.org/kinlydev/gopex/pkg/log"
+	"github.com/mariusmagureanu/gopex/pkg/errors"
+	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
 // TokenStore is a type that handles the storage

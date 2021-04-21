@@ -10,8 +10,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"bitbucket.org/kinlydev/gopex/pexip"
-	logger "bitbucket.org/kinlydev/gopex/pkg/log"
+	"github.com/mariusmagureanu/gopex/pexip"
+	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
 const (

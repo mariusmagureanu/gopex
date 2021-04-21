@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"bitbucket.org/kinlydev/gopex/api-gw/mux"
-	"bitbucket.org/kinlydev/gopex/pexip"
-	"bitbucket.org/kinlydev/gopex/pkg/dbl"
-	"bitbucket.org/kinlydev/gopex/pkg/log"
+	"github.com/mariusmagureanu/gopex/api-gw/mux"
+	"github.com/mariusmagureanu/gopex/pexip"
+	"github.com/mariusmagureanu/gopex/pkg/dbl"
+	"github.com/mariusmagureanu/gopex/pkg/log"
 )
 
 var (

@@ -1,3 +1,3 @@
-module bitbucket.org/kinlydev/gopex/pkg/log
+module github.com/mariusmagureanu/gopex/pkg/log
 
 go 1.16
