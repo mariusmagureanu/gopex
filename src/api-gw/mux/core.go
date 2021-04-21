@@ -42,21 +42,6 @@ func InitMux() (*mux.Router, error) {
 	mgmtMux := mux.NewRouter()
 	mgmtMux.HandleFunc(apiV1Prefix+"/ping", wrapConferenceHandler(pingReqHandler)).Methods(http.MethodHead, http.MethodGet)
 
-	/*
-		// rest interface taken from pexws
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/disconnect_all", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/override_layout", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:lock|unlock}", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/{cmd:muteguests|unmuteguests}", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/disconnect_part", wrapParticipantHandler(participantDisconnectHandler)).Methods(http.MethodPost)
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/demote_host", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/promote_guest", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/lock_part", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd:unmute_part|mute_part}", wrapConferenceHandler(pingReqHandler))
-		mgmtMux.HandleFunc(urlNameSpace+"/{room}/participants/{partid}/{cmd}", wrapConferenceHandler(pingReqHandler))
-	*/
-
 	// rest interface taken from pexwebrtc
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/participants/{part_uuid}/{cmd}", wrapConferenceHandler(pingReqHandler))
 	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}/override_layout", wrapConferenceHandler(pingReqHandler))
