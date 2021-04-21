@@ -30,8 +30,6 @@ type partWrappedFunc = func(http.ResponseWriter, *http.Request, *pexip.Participa
 //TODO: to be removed
 func dummyConferences() {
 	mc := pexip.Conference{}
-	mc.Name = "marius@test.dev.kinlycloud.net"
-	mc.Pin = "6421"
 
 	confStore.Set(&mc)
 }
