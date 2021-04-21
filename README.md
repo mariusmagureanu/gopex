@@ -1,7 +1,7 @@
 Synopsis
 ========
 
-Gopex is an exercise project meant for a better understanding on how [pexmon](https://github.com/mariusmagureanu/pexmon/src/master/) works towards Pexip and [pex_portal](https://github.com/mariusmagureanu/pex_portal/src/master/).
+Gopex is a small project meant as a client towards Pexip while exposing a rest api to manage requests against Pexip.
 
 Currently still WIP.
 
