@@ -26,6 +26,15 @@ jobs:
       run: go install golang.org/x/lint/golint@latest
       shell: bash
       
+    - name: Vet
+      run: go vet ./...
+      
+    - name: Staticcheck
+      run: staticcheck ./...
+      
+    - name: Lint
+      run: golint ./...
+      
     - name: Build
       run: make all
 
