@@ -25,6 +25,9 @@ jobs:
     - name: Lint
       run: golint ./...
       
+    - name: Test
+      run: make test
+      
     - name: Build
       run: make all
 
