@@ -52,13 +52,8 @@ func (d *DAO) Rooms() RoomDao {
 	return d.roomDao
 }
 
-func (d *DAO) Sessions() SessionDao {
-	return d.sessionDao
-}
-
 func (d *DAO) initDataAccessObjects(gdb *gorm.DB) {
 	d.dbSession = gdb
 
 	d.roomDao = roomDao{db: gdb}
-	d.sessionDao = sessionDao{db: gdb}
 }

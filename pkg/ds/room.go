@@ -19,5 +19,5 @@ type Room struct {
 }
 
 func (Room) TableName() string {
-	return "rooms_roommodel"
+	return "rooms"
 }

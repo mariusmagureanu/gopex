@@ -11,5 +11,5 @@ type Layout struct {
 }
 
 func (Layout) TableName() string {
-	return "rooms_layout"
+	return "layouts"
 }

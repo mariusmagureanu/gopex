@@ -16,7 +16,7 @@ type Feature struct {
 	Lecture          bool `json:"lecture"`
 	C2bRoom          bool `json:"c2b_room"`
 	AutomaticDialout bool `json:"automatic_dialout"`
-	Allhands         bool `json:"allhands"`
+	AllHands         bool `json:"allhands"`
 	BoardMeeting     bool `json:"boardmeeting"`
 	CameraCrew       bool `json:"camera_crew"`
 	EventRoom        bool `json:"event_room"`
@@ -28,5 +28,5 @@ type Feature struct {
 }
 
 func (Feature) TableName() string {
-	return "rooms_featuremodel"
+	return "features"
 }

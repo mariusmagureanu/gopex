@@ -14,5 +14,5 @@ type User struct {
 }
 
 func (User) TableName() string {
-	return "rooms_portaluser"
+	return "users"
 }
