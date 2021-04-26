@@ -6,4 +6,5 @@ import "errors"
 
 var (
 	ErrorRoomAlreadyStarted = errors.New("room monitoring is already running")
+	ErrorSSEBodyIsEmpty     = errors.New("event message is empty")
 )

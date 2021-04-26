@@ -5,6 +5,8 @@ package dbl
 import (
 	"time"
 
+	"github.com/mariusmagureanu/gopex/pkg/ds"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -13,7 +15,7 @@ import (
 type DAO struct {
 	dbSession *gorm.DB
 
-	roomDao    RoomDao
+	roomDao RoomDao
 }
 
 func (d *DAO) InitSqlite(dbPath string) error {
@@ -45,6 +47,14 @@ func (d *DAO) InitPostgres(dsn string, maxIdle int, maxOpen int, maxLifetime tim
 	d.initDataAccessObjects(db)
 
 	return sqlDB.Ping()
+}
+
+func (d *DAO) DropTables() error {
+	return d.dbSession.Migrator().DropTable(ds.Room{})
+}
+
+func (d *DAO) CreateTables() error {
+	return d.dbSession.Migrator().AutoMigrate(ds.Room{})
 }
 
 func (d *DAO) Rooms() RoomDao {

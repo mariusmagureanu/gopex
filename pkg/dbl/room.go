@@ -8,6 +8,8 @@ import (
 
 type RoomDao interface {
 	GetByID(*ds.Room, int) error
+	GetAll(*[]ds.Room) error
+	Create(room *ds.Room) error
 }
 
 type roomDao struct {
@@ -16,4 +18,12 @@ type roomDao struct {
 
 func (r roomDao) GetByID(room *ds.Room, roomID int) error {
 	return r.db.Where("id=?", roomID).First(room).Error
+}
+
+func (r roomDao) GetAll(rooms *[]ds.Room) error {
+	return r.db.Find(rooms).Error
+}
+
+func (r roomDao) Create(room *ds.Room) error {
+	return r.db.Create(room).Error
 }
