@@ -14,7 +14,6 @@ type DAO struct {
 	dbSession *gorm.DB
 
 	roomDao    RoomDao
-	sessionDao SessionDao
 }
 
 func (d *DAO) InitSqlite(dbPath string) error {
