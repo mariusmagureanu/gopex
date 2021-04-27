@@ -75,6 +75,7 @@ func InitTokenStore() *TokenStore {
 	return &ts
 }
 
+//InitParticipantStore initializes a new ParticipantStore.
 func InitParticipantStore() *ParticipantStore {
 	ps := ParticipantStore{}
 	ps.store = make(map[string]*Participant)
