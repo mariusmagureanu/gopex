@@ -59,13 +59,16 @@ func startHTTPServer() error {
 	}
 
 	server := &http.Server{Handler: router}
+	server.IdleTimeout = 1 * time.Minute
+	server.ReadHeaderTimeout = 1 * time.Minute
+
 	listener, err := net.Listen("tcp4", fmt.Sprintf("%s:%d", *host, *port))
 
 	if err != nil {
 		return err
 	}
 
-	log.InfoSync("pex monitor about to start listening on", listener.Addr())
+	log.InfoSync("gopex about to start listening on", listener.Addr())
 
 	return server.Serve(listener)
 }
