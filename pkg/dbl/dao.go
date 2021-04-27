@@ -34,6 +34,8 @@ func (d *DAO) InitSqlite(dbPath string) error {
 	return nil
 }
 
+// InitPostgres initializes a connection against
+// a Postgres server.
 func (d *DAO) InitPostgres(dsn string, maxIdle int, maxOpen int, maxLifetime time.Duration) error {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
