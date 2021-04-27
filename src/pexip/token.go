@@ -20,7 +20,7 @@ type TokenStore struct {
 	store map[string]string
 
 	// map that stores the conference name as key
-	// and an unbuffered chanel as value, the channel
+	// and an unbuffered channel as value, the channel
 	// is used to signal a stop over refreshing tokens.
 	doneListeners map[string]chan bool
 
@@ -36,7 +36,7 @@ func (ts *TokenStore) set(roomName, token string) {
 }
 
 // remove deletes from the storage the conference name,
-// both the token and the chanel are removed.
+// both the token and the channel are removed.
 func (ts *TokenStore) remove(roomName string) {
 	ts.Lock()
 	delete(ts.store, roomName)
@@ -113,7 +113,7 @@ func (ts *TokenStore) Get(roomName string) (string, error) {
 // in order to revoke the current token, if succesfull the token
 // storage will also clear it from its own storage.
 func (ts *TokenStore) Release(room *Conference) error {
-	revokeUrl := fmt.Sprintf("%s/%s/%s/%s", pexipHost, urlNameSpace, room.Name, ReleaseToken)
+	revokeURL := fmt.Sprintf("%s/%s/%s/%s", pexipHost, urlNameSpace, room.Name, ReleaseToken)
 	logger.Debug("releasing token for room", room.Name)
 
 	currentToken, err := ts.Get(room.Name)
@@ -121,7 +121,7 @@ func (ts *TokenStore) Release(room *Conference) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, revokeUrl, nil)
+	req, err := http.NewRequest(http.MethodPost, revokeURL, nil)
 	if err != nil {
 		return err
 	}

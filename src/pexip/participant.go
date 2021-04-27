@@ -8,6 +8,8 @@ import (
 	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
+// ParticipantStore is a type that acts as a storage
+// to keep track of currently active participants.
 type ParticipantStore struct {
 	store map[string]*Participant
 	sync.RWMutex
@@ -21,6 +23,8 @@ func (ps *ParticipantStore) Set(uuid string) {
 	ps.Unlock()
 }
 
+// AddMultiple creates and adds new Participants in the store
+// given their assigned uuid's.
 func (ps *ParticipantStore) AddMultiple(uuids []string) {
 	ps.Lock()
 	for _, u := range uuids {
@@ -49,27 +53,35 @@ func (ps *ParticipantStore) Remove(uuid string) {
 	ps.Unlock()
 }
 
+// Participant is a type the represents a person
+// that takes part in an active conference.
 type Participant struct {
 	UUID string
 }
 
+// Disconnect will disconnect the participant from the
+// specified room.
 func (p *Participant) Disconnect(roomName, token string) ([]byte, error) {
 	logger.Debug("disconnecting participant ", p.UUID, "from room", roomName)
-	disconnectUrl := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantDisconnect)
+	disconnectURL := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantDisconnect)
 
-	return doRequest(http.MethodPost, disconnectUrl, token, "", []byte{})
+	return doRequest(http.MethodPost, disconnectURL, token, "", []byte{})
 }
 
+// SpotlightOff will remove the spotlight for the calling participant
+// in the specified room.
 func (p *Participant) SpotlightOff(roomName, token string) ([]byte, error) {
 	logger.Debug("setting spotlight off for participant ", p.UUID, "from room", roomName)
-	spotlightOffUrl := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantSpotlightOff)
+	spotlightOffURL := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantSpotlightOff)
 
-	return doRequest(http.MethodPost, spotlightOffUrl, token, "", []byte{})
+	return doRequest(http.MethodPost, spotlightOffURL, token, "", []byte{})
 }
 
+// SpotlightOn will set the spotlight on the calling participant
+// for the specified room.
 func (p *Participant) SpotlightOn(roomName, token string) ([]byte, error) {
 	logger.Debug("setting spotlight on for participant ", p.UUID, "from room", roomName)
-	spotlightOnUrl := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantSpotlightOn)
+	spotlightOnURL := fmt.Sprintf("%s/%s/%s/%s/%s", urlNameSpace, roomName, "participants", p.UUID, ParticipantSpotlightOn)
 
-	return doRequest(http.MethodPost, spotlightOnUrl, token, "", []byte{})
+	return doRequest(http.MethodPost, spotlightOnURL, token, "", []byte{})
 }

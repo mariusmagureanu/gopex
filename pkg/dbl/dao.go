@@ -12,12 +12,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// DAO is a type that manages the connection to a database
+// and holds objects which provide CRUD functionality
+// for all involved models.
 type DAO struct {
 	dbSession *gorm.DB
 
 	roomDao RoomDao
 }
 
+// InitSqlite initializes a connection against
+// a sqlite database.
 func (d *DAO) InitSqlite(dbPath string) error {
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
