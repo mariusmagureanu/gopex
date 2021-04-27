@@ -5,6 +5,11 @@ package errors
 import "errors"
 
 var (
-	ErrorRoomAlreadyStarted = errors.New("room monitoring is already running")
-	ErrorSSEBodyIsEmpty     = errors.New("event message is empty")
+	// ErrRoomAlreadyStarted is a custom error thrown
+	// when a given room is already being monitored.
+	ErrRoomAlreadyStarted = errors.New("room monitoring is already running")
+
+	// ErrSSEBodyIsEmpty is a custom error thrown
+	// when a received SSE has an empty message.
+	ErrSSEBodyIsEmpty = errors.New("event message is empty")
 )

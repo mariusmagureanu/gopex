@@ -15,6 +15,8 @@ import (
 // DAO is a type that manages the connection to a database
 // and holds objects which provide CRUD functionality
 // for all involved models.
+// The entire implementation is based on
+// https://gorm.io/docs/v2_release_note.html
 type DAO struct {
 	dbSession *gorm.DB
 
@@ -34,6 +36,8 @@ func (d *DAO) InitSqlite(dbPath string) error {
 	return nil
 }
 
+// InitPostgres initializes a connection against
+// a Postgres server.
 func (d *DAO) InitPostgres(dsn string, maxIdle int, maxOpen int, maxLifetime time.Duration) error {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -54,14 +58,20 @@ func (d *DAO) InitPostgres(dsn string, maxIdle int, maxOpen int, maxLifetime tim
 	return sqlDB.Ping()
 }
 
+// DropTables instructs gorm to drop all
+// tables for the configured database.
 func (d *DAO) DropTables() error {
 	return d.dbSession.Migrator().DropTable(ds.Room{})
 }
 
+// CreateTables instructs gorm to create
+// tables for all the corresponding model types.
 func (d *DAO) CreateTables() error {
 	return d.dbSession.Migrator().AutoMigrate(ds.Room{})
 }
 
+// Rooms returns a dao object which exposes
+// CRUD functionality for the Room type.
 func (d *DAO) Rooms() RoomDao {
 	return d.roomDao
 }

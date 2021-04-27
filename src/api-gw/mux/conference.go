@@ -28,7 +28,7 @@ func monitorStartHandler(w http.ResponseWriter, r *http.Request) {
 	err = tokenStore.Watch(conf)
 
 	if err != nil {
-		if err == errors.ErrorRoomAlreadyStarted {
+		if err == errors.ErrRoomAlreadyStarted {
 			logger.Info(err)
 			w.WriteHeader(http.StatusOK)
 			return

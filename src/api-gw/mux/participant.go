@@ -1,8 +1,9 @@
 package mux
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"github.com/mariusmagureanu/gopex/pexip"
 	logger "github.com/mariusmagureanu/gopex/pkg/log"

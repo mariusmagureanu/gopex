@@ -148,7 +148,7 @@ func (ts *TokenStore) Watch(room *Conference) error {
 	currentToken, _ := ts.Get(room.Name)
 
 	if currentToken != "" {
-		return errors.ErrorRoomAlreadyStarted
+		return errors.ErrRoomAlreadyStarted
 	}
 
 	err := ts.request(room)

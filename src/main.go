@@ -91,7 +91,7 @@ func initSqlite() error {
 func main() {
 
 	commandLine.Usage = func() {
-		fmt.Fprint(os.Stdout, "Pexip Monitor usage:\n")
+		fmt.Println("Pexip Monitor usage:")
 		commandLine.PrintDefaults()
 	}
 

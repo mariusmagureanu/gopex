@@ -6,6 +6,8 @@ import (
 	"github.com/mariusmagureanu/gopex/pkg/ds"
 )
 
+// RoomDao is in interface which exhibits
+// CRUD operations for the Room type.
 type RoomDao interface {
 	GetByID(*ds.Room, int) error
 	GetAll(*[]ds.Room) error
