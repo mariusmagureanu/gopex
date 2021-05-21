@@ -1,0 +1,8 @@
+!README.md
+.git
+.github
+.gitignore
+src/bin/*
+nats_client
+docker-compose.yaml
+Dockerfile

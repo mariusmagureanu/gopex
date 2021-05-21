@@ -1,0 +1,37 @@
+---
+version: "3.8"
+services:
+    kc:
+        image: "kc:latest"
+        restart: always
+        build: .
+        command: "./monitor -nats-host nats -db-user ${POSTGRES_USER} -db-pwd ${POSTGRES_PASSWORD} -db-name ${POSTGRES_DB} -db-host db -db-port ${POSTGRES_PORT}"
+        depends_on:
+            - db
+            - nats
+        expose:
+            - 8088
+
+    db:
+        image: postgres:12.0-alpine
+        env_file:
+            - .env
+
+    nats:
+        image: "nats:2-alpine"
+        restart: always
+        expose:
+            - "4222"
+            - "5222"
+        ports:
+            - 4222:4222
+        command: nats-server
+
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf:ro
+        depends_on:
+            - kc
+        ports:
+            - "81:1081"
