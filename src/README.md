@@ -35,7 +35,6 @@ Usage options
 |**pexip-node**           |Pexip node address (default "https://test-join.dev.kinlycloud.net")  |
 |**pexip-max-cons**       |Maximum open connections against a Pexip node (default 100)          |
 |**pexip-timeout**        |Default timeout for the http client talking with Pexip (default 5s)  |
-|**pexip-token-refresh**  |Interval for refreshing Pexip tokens (default 1m0s)                  |
 |**sqlite**               |Path to an sqlite database (mutually exclusive with *db-host*)       |
 |**V**    				  |Show current version and exit                                        |
 |**h**    				  |Show this help and exit                                              |
