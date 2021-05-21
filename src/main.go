@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/nats-io/nats.go"
+
 	"github.com/mariusmagureanu/gopex/api-gw/mux"
 	"github.com/mariusmagureanu/gopex/pexip"
 	"github.com/mariusmagureanu/gopex/pkg/dbl"
@@ -34,9 +36,9 @@ var (
 	pexipNode                 = commandLine.String("pexip-node", "https://test-join.dev.kinlycloud.net", "Pexip node address")
 	pexipClientTimeout        = commandLine.Duration("pexip-timeout", 5*time.Second, "Default timeout for the http client talking with Pexip")
 	pexipMaxConns             = commandLine.Int("pexip-max-conns", 100, "Maximum open connections against a Pexip node")
-	pexipTokenRefreshInterval = commandLine.Duration("pexip-token-refresh", 60*time.Second, "Interval for refreshing Pexip tokens")
 
-	sqliteDBFlag = commandLine.String("sqlite", "", "Path to an sqlite database")
+	natsHostFlag = commandLine.String("nats-host", "0.0.0.0", "Nats server host")
+	natsPortFlag = commandLine.Int("nats-port", 4222, "Nat server port")
 
 	version  = "N/A"
 	revision = "N/A"
@@ -52,7 +54,7 @@ func initLogger() {
 }
 
 func startHTTPServer() error {
-	router, err := mux.InitMux()
+	router, err := mux.InitMux(&db)
 
 	if err != nil {
 		return err
@@ -83,18 +85,10 @@ func initPostgresql() error {
 	return err
 }
 
-func initSqlite() error {
-	log.Debug("connecting to sqlite with", *sqliteDBFlag)
-
-	err := db.InitSqlite(*sqliteDBFlag)
-
-	return err
-}
-
 func main() {
 
 	commandLine.Usage = func() {
-		fmt.Println("Pexip Monitor usage:")
+		fmt.Println("Kinly controller usage:")
 		commandLine.PrintDefaults()
 	}
 
@@ -111,22 +105,22 @@ func main() {
 
 	initLogger()
 
-	//TODO: uncomment this if you actually have a database
-	/*
-			if *sqliteDBFlag != "" {
-				err = initSqlite()
-			} else {
-				err = initPostgresql()
-			}
+	natsUrl := fmt.Sprintf("nats://%s:%d", *natsHostFlag, *natsPortFlag)
+	log.Debug("connecting to nats-server at", natsUrl)
+	nc, err := nats.Connect(natsUrl)
 
+	if err != nil {
+		log.ErrorSync(err)
+		os.Exit(1)
+	}
 
-		if err != nil {
-			log.ErrorSync(err)
-			os.Exit(1)
-		}
-	*/
+	err = initPostgresql()
+	if err != nil {
+		log.ErrorSync(err)
+		os.Exit(1)
+	}
 
-	err = pexip.InitPexipClient(*pexipNode, *pexipClientTimeout, *pexipMaxConns, *pexipMaxConns, *pexipTokenRefreshInterval)
+	err = pexip.InitPexipClient(*pexipNode, *pexipClientTimeout, *pexipMaxConns, *pexipMaxConns, nc)
 
 	if err != nil {
 		log.ErrorSync(err)
