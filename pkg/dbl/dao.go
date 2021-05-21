@@ -54,6 +54,11 @@ func (d *DAO) InitPostgres(dsn string, maxIdle int, maxOpen int, maxLifetime tim
 	sqlDB.SetConnMaxLifetime(maxLifetime)
 
 	d.initDataAccessObjects(db)
+	err = d.dbSession.Migrator().AutoMigrate(ds.Room{})
+
+	if err != nil {
+		return err
+	}
 
 	return sqlDB.Ping()
 }
