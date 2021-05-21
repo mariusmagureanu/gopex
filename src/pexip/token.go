@@ -11,27 +11,27 @@ import (
 	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
 
+type token struct {
+	Value     string
+	Timestamp time.Time
+}
+
 // TokenStore is a type that handles the storage
 // and lifecycle of a token.
 type TokenStore struct {
+	sync.RWMutex
 
 	// map that stores the conference name as key
 	// and token as value.
-	store map[string]string
-
-	// map that stores the conference name as key
-	// and an unbuffered channel as value, the channel
-	// is used to signal a stop over refreshing tokens.
-	doneListeners map[string]chan bool
-
-	sync.RWMutex
+	store map[string]token
 }
 
 // set updates the storage with a conference name
 // and a new token value.
-func (ts *TokenStore) set(roomName, token string) {
+func (ts *TokenStore) set(roomName, tks string) {
 	ts.Lock()
-	ts.store[roomName] = token
+	tk := token{Value: tks, Timestamp: time.Now()}
+	ts.store[roomName] = tk
 	ts.Unlock()
 }
 
@@ -40,7 +40,6 @@ func (ts *TokenStore) set(roomName, token string) {
 func (ts *TokenStore) remove(roomName string) {
 	ts.Lock()
 	delete(ts.store, roomName)
-	delete(ts.doneListeners, roomName)
 	ts.Unlock()
 }
 
@@ -69,20 +68,20 @@ func (ts *TokenStore) refresh(room *Conference) error {
 	return nil
 }
 
-// request performs a http request against the pexip node
+// Fetch performs a http request against a pexip node
 // and asks for a new initial **request_token** given a specific conference.
-func (ts *TokenStore) request(room *Conference) error {
-	urlReq := fmt.Sprintf("%s/%s/%s", urlNameSpace, room.Name, RequestToken)
-	logger.Debug("started watching room", room.Name)
+func (ts *TokenStore) Fetch(roomAlias, pin string) error {
+	urlReq := fmt.Sprintf("%s/%s/%s", urlNameSpace, roomAlias, RequestToken)
+	logger.Debug("request pexip token for room", roomAlias)
 
-	p := payload{DisplayName: room.Alias}
+	p := payload{DisplayName: roomAlias}
 	pb, err := json.Marshal(&p)
 
 	if err != nil {
 		return err
 	}
 
-	respBody, err := doRequest(http.MethodPost, urlReq, "", room.Pin, pb)
+	respBody, err := doRequest(http.MethodPost, urlReq, "", pin, pb)
 
 	var tokenResp tokenResponse
 
@@ -92,7 +91,7 @@ func (ts *TokenStore) request(room *Conference) error {
 		return err
 	}
 
-	ts.set(room.Name, tokenResp.Result.Token)
+	ts.set(roomAlias, tokenResp.Result.Token)
 
 	return nil
 }
@@ -103,10 +102,15 @@ func (ts *TokenStore) Get(roomName string) (string, error) {
 	defer ts.RUnlock()
 
 	if token, found := ts.store[roomName]; found {
-		return token, nil
+		if token.Timestamp.Add(2 * time.Minute).Before(time.Now()) {
+			delete(ts.store, roomName)
+			return "", errors.ErrExpiredPexipToken
+		}
+
+		return token.Value, nil
 	}
 
-	return "", fmt.Errorf("could not find token in store, no room found by [%s]", roomName)
+	return "", errors.ErrNoPexipToken
 }
 
 // Release performs a http request against the pexip node
@@ -134,49 +138,7 @@ func (ts *TokenStore) Release(room *Conference) error {
 		return err
 	}
 
-	close(ts.doneListeners[room.Name])
 	ts.remove(room.Name)
-
-	return nil
-}
-
-// Watch retrieves an initial **request_token** for a given
-// conference and starts a goroutine which will keep on
-// fetching a **refresh_token** every **refreshInterval**.
-func (ts *TokenStore) Watch(room *Conference) error {
-
-	currentToken, _ := ts.Get(room.Name)
-
-	if currentToken != "" {
-		return errors.ErrRoomAlreadyStarted
-	}
-
-	err := ts.request(room)
-
-	if err != nil {
-		return err
-	}
-
-	ticker := time.NewTicker(refreshInterval)
-
-	done := make(chan bool)
-	ts.doneListeners[room.Name] = done
-
-	go func(c *Conference) {
-		for {
-			select {
-			case <-done:
-				logger.Debug("stopped watching room", c.Name)
-				return
-			case <-ticker.C:
-				err := ts.refresh(c)
-				if err != nil {
-					logger.Error(err)
-					return
-				}
-			}
-		}
-	}(room)
 
 	return nil
 }

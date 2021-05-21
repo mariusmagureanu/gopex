@@ -5,11 +5,14 @@ package pexip
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/nats-io/nats.go"
 
 	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
@@ -40,7 +43,7 @@ const (
 var (
 	pexipHost       string
 	client          *http.Client
-	refreshInterval time.Duration
+	natsConn        *nats.Conn
 
 	headerID    = []byte("id:")
 	headerData  = []byte("data:")
@@ -48,19 +51,10 @@ var (
 	headerRetry = []byte("retry:")
 )
 
-// InitConfStore initializes a new ConferenceStore.
-func InitConfStore() *ConferenceStore {
-	cs := ConferenceStore{}
-	cs.store = make(map[string]*Conference)
-
-	return &cs
-}
-
 // InitTokenStore initializes a new TokenStore.
 func InitTokenStore() *TokenStore {
 	ts := TokenStore{}
-	ts.store = make(map[string]string)
-	ts.doneListeners = make(map[string]chan bool)
+	ts.store = make(map[string]token)
 
 	return &ts
 }
@@ -73,12 +67,20 @@ func InitParticipantStore() *ParticipantStore {
 	return &ps
 }
 
+func InitSSEManager() *SSEManager {
+	sse := SSEManager{}
+	sse.sseClient = &http.Client{}
+	sse.cancelFuncs = make(map[string]context.CancelFunc)
+
+	return &sse
+}
+
 // InitPexipClient initializes a new http client used
 // for all communication against the Pexip api.
-func InitPexipClient(host string, timeout time.Duration, maxConns, maxIdleConns int, tokenRefresh time.Duration) error {
+func InitPexipClient(host string, timeout time.Duration, maxConns, maxIdleConns int, nc *nats.Conn) error {
 
+	natsConn = nc
 	pexipHost = host
-	refreshInterval = tokenRefresh
 
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = maxIdleConns

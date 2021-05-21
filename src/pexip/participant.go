@@ -19,18 +19,18 @@ type ParticipantStore struct {
 // uuid as key and itself as value.
 func (ps *ParticipantStore) Set(uuid string) {
 	ps.Lock()
+	defer ps.Unlock()
 	ps.store[uuid] = &Participant{UUID: uuid}
-	ps.Unlock()
 }
 
 // AddMultiple creates and adds new Participants in the store
 // given their assigned uuid's.
 func (ps *ParticipantStore) AddMultiple(uuids []string) {
 	ps.Lock()
+	defer ps.Unlock()
 	for _, u := range uuids {
 		ps.store[u] = &Participant{UUID: u}
 	}
-	ps.Unlock()
 }
 
 // Get returns a Participant from the store
@@ -49,8 +49,9 @@ func (ps *ParticipantStore) Get(uuid string) (*Participant, error) {
 // Remove removes a Participant from the store.
 func (ps *ParticipantStore) Remove(uuid string) {
 	ps.Lock()
+	defer ps.Unlock()
+
 	delete(ps.store, uuid)
-	ps.Unlock()
 }
 
 // Participant is a type the represents a person

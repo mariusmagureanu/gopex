@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/nats-io/nats.go"
+
 	"github.com/mariusmagureanu/gopex/pkg/errors"
 	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
@@ -32,36 +34,38 @@ type SSEManager struct {
 
 func (s *SSEManager) addCancelable(roomName string, cf context.CancelFunc) {
 	s.Lock()
+	defer s.Unlock()
+
 	s.cancelFuncs[roomName] = cf
-	s.Unlock()
 }
 
 func (s *SSEManager) removeCancelable(roomName string) {
 	s.Lock()
+	defer s.Unlock()
+
 	delete(s.cancelFuncs, roomName)
-	s.Unlock()
 }
 
 func (s *SSEManager) getCancelable(roomName string) (context.CancelFunc, error) {
 	s.RLock()
+	defer s.RUnlock()
+
 	if cf, ok := s.cancelFuncs[roomName]; ok {
 		return cf, nil
 	}
-	s.RUnlock()
-
-	return nil, fmt.Errorf("dds")
+	return nil, fmt.Errorf("fill this in")
 }
 
 // Stop cancels a sse request for the specified room.
 func (s *SSEManager) Stop(roomName string) error {
 	cf, err := s.getCancelable(roomName)
-
 	if err != nil {
 		return err
 	}
 
-	cf()
 	s.removeCancelable(roomName)
+
+	cf()
 
 	return nil
 }
@@ -113,15 +117,32 @@ func (s *SSEManager) Listen(roomName, token string) error {
 	for {
 		msg, err := bodyReader.ReadBytes('\n')
 		if err != nil {
-			logger.Error(err)
+			switch ctx.Err() {
+			case context.DeadlineExceeded, context.Canceled:
+				logger.Warning(err, ",stopped listening for sse's on", roomName)
+			default:
+				logger.Error(err)
+			}
 			break
 		}
 
-		_, err = processEvent(msg)
+		ev, err := processEvent(msg)
 
 		if err != nil {
 			logger.Error(err)
 			break
+		}
+
+		if ev.Event == "" {
+			continue
+		}
+
+		logger.Debug(roomName, ev.Event)
+		m := nats.Msg{Subject: "sse", Data: []byte(ev.Event)}
+
+		err = natsConn.PublishMsg(&m)
+		if err != nil {
+			logger.Error(err)
 		}
 	}
 

@@ -3,45 +3,9 @@ package pexip
 import (
 	"fmt"
 	"net/http"
-	"sync"
 
 	logger "github.com/mariusmagureanu/gopex/pkg/log"
 )
-
-// ConferenceStore is a type that acts as storage
-// to keep track of running conferences.
-type ConferenceStore struct {
-	store map[string]*Conference
-	sync.RWMutex
-}
-
-// Set adds a new conference to the store, using its
-// name as key and itself as value.
-func (cs *ConferenceStore) Set(conference *Conference) {
-	cs.Lock()
-	cs.store[conference.Name] = conference
-	cs.Unlock()
-}
-
-// Get returns a Conference from the store
-// given its name.
-func (cs *ConferenceStore) Get(roomName string) (*Conference, error) {
-	cs.RLock()
-	defer cs.RUnlock()
-
-	if conf, found := cs.store[roomName]; found {
-		return conf, nil
-	}
-
-	return nil, fmt.Errorf("could not find a conference in the store, no conference found by [%s]", roomName)
-}
-
-// Remove removes a Conference from the store.
-func (cs *ConferenceStore) Remove(roomName string) {
-	cs.Lock()
-	delete(cs.store, roomName)
-	cs.Unlock()
-}
 
 // Conference is a type which represents a room in Pexip.
 // The "room" term will often be used as a conference as well,
