@@ -2,8 +2,12 @@ package mux
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/mariusmagureanu/gopex/pkg/ds"
 
 	"github.com/mariusmagureanu/gopex/pexip"
 	"github.com/mariusmagureanu/gopex/pkg/errors"
@@ -12,117 +16,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func monitorStartHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Debug(r.Method, r.Proto, r.Host+r.RequestURI)
-	vars := mux.Vars(r)
-	confName := vars["room"]
+func createNewRoomHandler(w http.ResponseWriter, r *http.Request) {
+	var room ds.Room
 
-	conf, err := confStore.Get(confName)
+	mimeType := r.Header.Get("Content-Type")
 
-	if err != nil {
-		logger.Warning(err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	err = tokenStore.Watch(conf)
-
-	if err != nil {
-		if err == errors.ErrRoomAlreadyStarted {
-			logger.Info(err)
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusAccepted)
-}
-
-func monitorStopHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
-
-	err := tokenStore.Release(conf)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func conferenceCmdHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
-	var (
-		err     error
-		cmdResp []byte
-	)
-
-	vars := mux.Vars(r)
-	cmd := vars["cmd"]
-
-	switch cmd {
-	case pexip.CommandLock:
-		cmdResp, err = conf.Lock(token)
-		break
-	case pexip.CommandUnlock:
-		cmdResp, err = conf.Unlock(token)
-		break
-	case pexip.CommandMuteGuests:
-		cmdResp, err = conf.MuteGuests(token)
-		break
-	case pexip.CommandUnmuteGuests:
-		cmdResp, err = conf.UnmuteGuests(token)
-		break
-	default:
-		logger.Warning("unsupported command", cmd)
+	if mimeType != "application/json" {
+		logger.Warning("invalid content type", mimeType)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(cmdResp)
-}
-
-func conferenceStatusHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
-
-	statusResp, err := conf.Status(token)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(statusResp)
-}
-
-func conferenceDisconnectHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
-
-	disconnectResp, err := conf.Disconnect(token)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(disconnectResp)
-}
-
-func conferenceDialHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
-
-	dp, err := ioutil.ReadAll(r.Body)
+	b, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
 		logger.Error(err)
@@ -132,88 +37,236 @@ func conferenceDialHandler(w http.ResponseWriter, r *http.Request, conf *pexip.C
 
 	defer r.Body.Close()
 
-	dialResp, err := conf.Dial(token, dp)
+	err = json.Unmarshal(b, &room)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = dao.Rooms().Create(&room)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	location := fmt.Sprintf("%s/%s/%s", apiV1Prefix, "room", room.Name)
+	w.Header().Set("Content-Location", location)
+	w.Header().Set("Content-Length", "0")
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func getAllRoomsHandler(w http.ResponseWriter, r *http.Request) {
+	var rooms []ds.Room
+
+	outputType := r.Header.Get("Accept")
+
+	if outputType != "application/json" {
+		logger.Error("cannot serve requested mime type", outputType)
+		w.WriteHeader(http.StatusNotAcceptable)
+		return
+	}
+
+	err := dao.Rooms().GetAll(&rooms)
 
 	if err != nil {
 		logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	out, err := json.Marshal(&rooms)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	w.Write(out)
+}
+
+func getRoomHandler(w http.ResponseWriter, r *http.Request) {
+	outputType := r.Header.Get("Accept")
+
+	if outputType != "application/json" {
+		logger.Error("cannot serve requested mime type", outputType)
+		w.WriteHeader(http.StatusNotAcceptable)
+		return
+	}
+
+	var room ds.Room
+	vars := mux.Vars(r)
+
+	confName := vars["room"]
+	err := dao.Rooms().GetByName(&room, confName)
+
+	if err != nil {
+		switch err {
+		case errors.ErrRecordNotFound:
+			logger.Warning(err)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		default:
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	out, err := json.Marshal(&room)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	w.Write(out)
+}
+
+func deleteRoomHandler(w http.ResponseWriter, r *http.Request) {
+	var room ds.Room
+	vars := mux.Vars(r)
+
+	confName := vars["room"]
+
+	err := dao.Rooms().GetByName(&room, confName)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = dao.Rooms().Delete(&room)
+
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func monitorStartHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+
+	go func() {
+		err := sseManager.Listen(conf.Name, token)
+		if err != nil {
+			logger.Error(err)
+			return
+		}
+	}()
+
+	return []byte{}, nil
+}
+
+func monitorStopHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	var (
+		err error
+		out []byte
+	)
+
+	err = sseManager.Stop(conf.Name)
+	if err != nil {
+		return out, err
+	}
+
+	err = tokenStore.Release(conf)
+	return out, err
+}
+
+func conferenceLockHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.Lock(token)
+}
+
+func conferenceUnLockHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.Unlock(token)
+}
+
+func conferenceMuteGuestsHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.MuteGuests(token)
+}
+
+func conferenceUnmuteGuestsHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.UnmuteGuests(token)
+}
+
+func conferenceStatusHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.Status(token)
+}
+
+func conferenceDisconnectHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.Disconnect(token)
+}
+
+func conferenceDialHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+
+	var (
+		err error
+		out []byte
+	)
+
+	dp, err := ioutil.ReadAll(r)
+
+	if err != nil {
+		return out, err
+	}
+
+	out, err = conf.Dial(token, dp)
+
+	if err != nil {
+		return out, err
 	}
 
 	var dpr pexip.DialResponse
 
-	err = json.Unmarshal(dialResp, &dpr)
+	err = json.Unmarshal(out, &dpr)
 
 	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return out, err
 	}
 
 	participantStore.AddMultiple(dpr.Result)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(dialResp)
+	return out, nil
 }
 
-func conferenceParticipantsHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
-
-	participantsResp, err := conf.Participants(token)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(participantsResp)
+func conferenceParticipantsHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	return conf.Participants(token)
 }
 
-func conferenceMessageHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
+func conferenceMessageHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	var out []byte
 
-	msg, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-
-	messageResp, err := conf.Message(token, msg)
+	msg, err := ioutil.ReadAll(r)
 
 	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return out, err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(messageResp)
+	return conf.Message(token, msg)
 }
 
-func transformLayoutHandler(w http.ResponseWriter, r *http.Request, conf *pexip.Conference, token string) {
+func transformLayoutHandler(conf *pexip.Conference, r io.Reader, token string) ([]byte, error) {
+	var out []byte
 
-	layout, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-
-	layoutResp, err := conf.Message(token, layout)
+	layout, err := ioutil.ReadAll(r)
 
 	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return out, err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(layoutResp)
+	return conf.Message(token, layout)
 }
