@@ -10,4 +10,6 @@ RUN apk add --update make git
 RUN make all
 
 FROM alpine
+RUN adduser -D -g '' kc
+USER kc
 COPY --from=builder /go/src/bin/monitor monitor
