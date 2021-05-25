@@ -49,31 +49,31 @@ func InitMux(db *dbl.DAO) (*mux.Router, error) {
 
 	mgmtMux.HandleFunc(apiV1Prefix+"/ping", wrapRequestHandler(pingReqHandler)).Methods(http.MethodHead, http.MethodGet)
 
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/participants/{part_uuid}/{cmd}", wrapRequestHandler(pingReqHandler))
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/override_layout", wrapRequestHandler(pingReqHandler))
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/participants/{part_uuid}/transfer", wrapRequestHandler(pingReqHandler))
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants/{part_uuid}/{cmd}", wrapRequestHandler(pingReqHandler))
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/override_layout", wrapRequestHandler(pingReqHandler))
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants/{part_uuid}/transfer", wrapRequestHandler(pingReqHandler))
 	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants/{part_uuid}/role", wrapRequestHandler(pingReqHandler))
 
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/start", wrapConferenceHandler(monitorStartHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/stop", wrapConferenceHandler(monitorStopHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/participants", wrapConferenceHandler(conferenceParticipantsHandler)).Methods(http.MethodGet)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/dial", wrapConferenceHandler(conferenceDialHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/lock", wrapConferenceHandler(conferenceLockHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/unlock", wrapConferenceHandler(conferenceUnLockHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/muteguests", wrapConferenceHandler(conferenceMuteGuestsHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/unmuteguests", wrapConferenceHandler(conferenceUnmuteGuestsHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/transform_layout", wrapConferenceHandler(transformLayoutHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/disconnect", wrapConferenceHandler(conferenceDisconnectHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/participants/{part_uuid}/spotlighton", wrapParticipantHandler(participantSpotlightOnHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/participants/{part_uuid}/spotlightoff", wrapParticipantHandler(participantSpotlightOffHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/status", wrapConferenceHandler(conferenceStatusHandler)).Methods(http.MethodGet)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/message", wrapConferenceHandler(conferenceMessageHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(pexipNameSpace+"/rooms/{room}/participants/{part_id}/disconnect", wrapParticipantHandler(participantDisconnectHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/start", wrapConferenceHandler(monitorStartHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/stop", wrapConferenceHandler(monitorStopHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants", wrapConferenceHandler(conferenceParticipantsHandler)).Methods(http.MethodGet)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/dial", wrapConferenceHandler(conferenceDialHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/lock", wrapConferenceHandler(conferenceLockHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/unlock", wrapConferenceHandler(conferenceUnLockHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/muteguests", wrapConferenceHandler(conferenceMuteGuestsHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/unmuteguests", wrapConferenceHandler(conferenceUnmuteGuestsHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/transform_layout", wrapConferenceHandler(transformLayoutHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/disconnect", wrapConferenceHandler(conferenceDisconnectHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants/{part_uuid}/spotlighton", wrapParticipantHandler(participantSpotlightOnHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants/{part_uuid}/spotlightoff", wrapParticipantHandler(participantSpotlightOffHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/status", wrapConferenceHandler(conferenceStatusHandler)).Methods(http.MethodGet)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/message", wrapConferenceHandler(conferenceMessageHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(pexipNameSpace+"/room/{room}/participants/{part_id}/disconnect", wrapParticipantHandler(participantDisconnectHandler)).Methods(http.MethodPost)
 
-	mgmtMux.HandleFunc(apiV1Prefix+"/rooms", wrapRequestHandler(createNewRoomHandler)).Methods(http.MethodPost)
-	mgmtMux.HandleFunc(apiV1Prefix+"/rooms", wrapRequestHandler(getAllRoomsHandler)).Methods(http.MethodGet)
-	mgmtMux.HandleFunc(apiV1Prefix+"/rooms/{room}", wrapRequestHandler(getRoomHandler)).Methods(http.MethodGet)
-	mgmtMux.HandleFunc(apiV1Prefix+"/rooms/{room}", wrapRequestHandler(deleteRoomHandler)).Methods(http.MethodDelete)
+	mgmtMux.HandleFunc(apiV1Prefix+"/room", wrapRequestHandler(createNewRoomHandler)).Methods(http.MethodPost)
+	mgmtMux.HandleFunc(apiV1Prefix+"/room", wrapRequestHandler(getAllRoomsHandler)).Methods(http.MethodGet)
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}", wrapRequestHandler(getRoomHandler)).Methods(http.MethodGet)
+	mgmtMux.HandleFunc(apiV1Prefix+"/room/{room}", wrapRequestHandler(deleteRoomHandler)).Methods(http.MethodDelete)
 
 	return mgmtMux, nil
 }
@@ -94,7 +94,7 @@ func getConferenceAndToken(roomName string) (*pexip.Conference, string, error) {
 		err   error
 	)
 
-	err = dao.Rooms().GetByName(&room, roomName)
+	err = dao.Rooms().GetByAlias(&room, roomName)
 
 	if err != nil {
 		return nil, token, err

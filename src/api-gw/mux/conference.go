@@ -105,7 +105,7 @@ func getRoomHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	confName := vars["room"]
-	err := dao.Rooms().GetByName(&room, confName)
+	err := dao.Rooms().GetByAlias(&room, confName)
 
 	if err != nil {
 		switch err {
@@ -140,12 +140,19 @@ func deleteRoomHandler(w http.ResponseWriter, r *http.Request) {
 
 	confName := vars["room"]
 
-	err := dao.Rooms().GetByName(&room, confName)
+	err := dao.Rooms().GetByAlias(&room, confName)
 
 	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		switch err {
+		case errors.ErrRecordNotFound:
+			logger.Warning(err)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		default:
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	err = dao.Rooms().Delete(&room)

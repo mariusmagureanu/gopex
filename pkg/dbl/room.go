@@ -13,7 +13,7 @@ import (
 // CRUD operations for the Room type.
 type RoomDao interface {
 	GetByID(*ds.Room, uint) error
-	GetByName(*ds.Room, string) error
+	GetByAlias(*ds.Room, string) error
 	GetAll(*[]ds.Room) error
 	Create(*ds.Room) error
 	Save(*ds.Room) error
@@ -34,8 +34,8 @@ func (r roomDao) GetByID(room *ds.Room, roomID uint) error {
 	return err
 }
 
-func (r roomDao) GetByName(room *ds.Room, name string) error {
-	err := r.db.Where("name=?", name).First(room).Error
+func (r roomDao) GetByAlias(room *ds.Room, name string) error {
+	err := r.db.Where("alias=?", name).First(room).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return e.ErrRecordNotFound
@@ -57,5 +57,5 @@ func (r roomDao) Save(room *ds.Room) error {
 }
 
 func (r roomDao) Delete(room *ds.Room) error {
-	return r.db.Delete(room).Error
+	return r.db.Unscoped().Delete(room).Error
 }
