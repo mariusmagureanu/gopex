@@ -1,0 +1,71 @@
+---
+- config:
+    - testset: "Basic test"
+    - timeout: 100
+- test:
+    - name: "Test ping"
+    - url: "/api/v1/ping"
+    - expected_status: [200]
+- test:
+    - name: "Test get non-existing room"
+    - url: "/api/v1/room/foo@bar.com"
+    - headers: {'Accept':'application/json'}
+    - expected_status: [404]
+- test:
+    - name: "Test get all rooms"
+    - url: "/api/v1/room"
+    - expected_status: [200]
+    - headers: {'Accept': 'application/json'}
+    - validators:
+        - compare: {header: 'Content-Type', comparator: 'str_eq', expected: "application/json"}
+- test:
+    - name: "Test create room"
+    - url: "/api/v1/room"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/json'}
+    - body: '{"name":"marius@test.dev.kinlycloud.net", "alias":"marius@test.dev.kinlycloud.net", "host_pin":"6421"}'
+    - expected_status: [201]
+- test:
+    - name: "Test get existing room"
+    - url: "/api/v1/room/marius@test.dev.kinlycloud.net"
+    - headers: {'Accept':'application/json'}
+    - expected_status: [200]
+    - validators:
+        - compare: {header: 'Content-Type', comparator: 'contains', expected: 'application/json'}
+        - compare: {jsonpath_mini: 'name', expected: 'marius@test.dev.kinlycloud.net'}
+- test:
+    - name: "Test unlock room"
+    - url: "/api/v1/pexip/room/marius@test.dev.kinlycloud.net/unlock"
+    - method: "POST"
+    - expected_status: [200]
+    - validators:
+        - compare: {jsonpath_mini: 'status', expected: 'success'}
+        - compare: {jsonpath_mini: 'result', comparator: 'str_eq', expected: 'True'}
+- test:
+    - name: "Test get room status from pexip"
+    - url: "/api/v1/pexip/room/marius@test.dev.kinlycloud.net/status"
+    - expected_status: [200]
+    - validators:
+        - compare: {jsonpath_mini: 'status', expected: 'success'}
+        - compare: {jsonpath_mini: 'result.locked', comparator: 'str_eq', expected: 'False'}
+- test:
+    - name: "Test lock room"
+    - url: "/api/v1/pexip/room/marius@test.dev.kinlycloud.net/lock"
+    - method: "POST"
+    - expected_status: [200]
+    - validators:
+        - compare: {jsonpath_mini: 'status', expected: 'success'}
+        - compare: {jsonpath_mini: 'result', comparator: 'str_eq', expected: 'True'}
+- test:
+    - name: "Test get room status from pexip after room update"
+    - url: "/api/v1/pexip/room/marius@test.dev.kinlycloud.net/status"
+    - expected_status: [200]
+    - validators:
+        - compare: {jsonpath_mini: 'status', expected: 'success'}
+        - compare: {jsonpath_mini: 'result.locked', comparator: 'str_eq', expected: 'True'}
+- test:
+    - name: "Test delete existing room"
+    - url: "/api/v1/room/marius@test.dev.kinlycloud.net"
+    - headers: {'Accept':'application/json'}
+    - method: "DELETE"
+    - expected_status: [204]
